@@ -10,7 +10,7 @@ from datetime import datetime,date
 from sqlalchemy import func
 UPLOAD_FOLDER = 'uploads/resumes'
 ALLOWED_EXTENSIONS = {'pdf'}
-today = date.today()
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -103,6 +103,7 @@ def necessary_information():
 @auth_required('token')
 @roles_required('student')
 def get_company_drives():
+    today = date.today()
     data = request.get_json()
     company_id = int(data.get('company_id'))
     email = data.get('email')
@@ -285,6 +286,7 @@ def csv_generation():
 
 @app.route('/api/get_all_applications_',methods=['GET'])
 def get_all_applications_():
+    today = date.today()
     drives_conducted = db.session.query(PlacementDrive).filter(func.date(PlacementDrive.application_deadline)<=today).all()
     result = []
     for i in drives_conducted:
