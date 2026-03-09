@@ -4,7 +4,7 @@ from model.models import *
 from flask_security import roles_required , auth_required
 from controllers.user_datastore import user_datastore
 from datetime import datetime,date
-today = date.today()
+
 from sqlalchemy import func
 from sqlalchemy import or_
 @app.route('/api/create_drive',methods=['POST'])
@@ -56,6 +56,7 @@ def create_drive():
 @auth_required('token')
 @roles_required('company')
 def ongoing_drives():
+    today = date.today()
     data = request.get_json()
     email = data.get('email')
     if(not email):
@@ -97,6 +98,7 @@ def ongoing_drives():
 @auth_required('token')
 @roles_required('company')
 def closed_drives():
+    today = date.today()
     data = request.get_json()
     email = data.get('email')
     if(not email):
