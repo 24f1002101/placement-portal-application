@@ -5,7 +5,7 @@ export const studentStore = defineStore('student_store', () => {
     const auth_store = useAuthStore()
     const Pendingstudents = ref([])
     const Approvedstudentslist = ref([])
-    const error_value = ref('')
+    let error_value = ref('')
     async function fetchpendingstudents(){
     try{
     const response = await fetch("http://127.0.0.1:5000/api/registered_students",{
