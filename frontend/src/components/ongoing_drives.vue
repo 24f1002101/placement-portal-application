@@ -1,95 +1,137 @@
 <script setup>
-import { useAuthStore } from '@/stores/counter';
-import { ref } from 'vue';
-import { onMounted } from 'vue';
-import { defineEmits } from 'vue';
-const auth_store = useAuthStore();
-const emit = defineEmits(['drive-closed'])
-const ongoing_companies = ref([])
-async function ongoing_drives(){
-    const auth_token = auth_store.getAuthToken()
-    const mail = auth_store.getUserEmail()
-    const input = {
-        email : mail
-    }
-    const response = await fetch("http://127.0.0.1:5000/api/ongoing_drives",{
-        method : "POST",
-        headers:
-            {  
-                "Content-Type" : "application/json",
-                "Authentication-Token" : auth_token
-            },
-        body : JSON.stringify(input)
-    })
-    if(!response.ok){
-        const output = await response.json()
-        alert(output.message)
-    }
-    else{
-        ongoing_companies.value = await response.json()
-    }
+import { ref, onMounted } from 'vue';
+import { companyStore } from '@/stores/company_store';
+import { computed } from 'vue';
+
+const emit = defineEmits(['action-taken'])
+const company_store = companyStore()
+const props = defineProps({
+    searchResults: Array,
+    searchType: String
+})
+const approved_list = computed(() => {
+    if (props.searchType !== 'company') return []
+    return props.searchResults.filter(c => c.status === 'approved')
+})
+const pending_companies = computed(() => {
+    if (props.searchType !== 'company') return []
+    return props.searchResults.filter(c => c.status === 'pending')
+})
+
+async function handleBlacklist(companyId) {
+    const success = await company_store.black_list(companyId)
+    if (success) emit('action-taken', companyId)
 }
-async function close_drive(placement_id){
-    const auth_token = auth_store.getAuthToken()
-    const mail = auth_store.getUserEmail()
-    const input = {
-        id : placement_id
-    }
-    const response = await fetch("http://127.0.0.1:5000/api/close_drive",{
-        method : "PUT",
-        headers : {
-            "Content-Type" : "application/json",
-            "Authentication-Token" : auth_token
-        },
-        body : JSON.stringify(input)
-    })
-    if(response.ok){
-        const output = await response.json()
-        alert(output.message)
-        emit('drive-closed')
-    }
-    await ongoing_drives()
+
+async function handleApprove(companyId) {
+    const success = await company_store.approve_company(companyId)
+    if (success) emit('action-taken', companyId)
 }
-onMounted(()=>{
-    ongoing_drives()
+
+onMounted(async () => {
+    await company_store.fetchapprovedCompanies()
+    await company_store.fetchpendingCompanies()
 })
 </script>
 
 <template>
-    <div>
-        <p>Ongoing Drives</p>
-        <div v-if="ongoing_companies.length > 0">
-           <table border="1">
-                <thead>
-                    <th>Drive ID</th>
-                    <th>Company Name</th>
-                    <th>Job Role</th>
-                    <th>Job Description</th>
-                    <th>Eligible Year</th>
-                    <th>Eligible Branch</th>
-                    <th>Eligible CGPA</th>
-                    <th>Action</th>
-                </thead>
-                <tbody>
-                <tr v-for="drive in ongoing_companies" :key="drive.id">
-                    <td>{{ drive.id }}</td>
-                    <td>{{ drive.company_details.company_name }}</td>
-                    <td>{{ drive.job_title }}</td>
-                    <td>{{ drive.job_description }}</td>
-                    <td>{{ drive.eligibility_year }}</td>
-                    <td>{{ drive.eligibility_branch }}</td>
-                    <td>{{ drive.eligibility_cgpa }}</td>
-                    <td><RouterLink :to="`/get_applications/${drive.id}`"><button>View Details</button></RouterLink><button v-on:click="close_drive(drive.id)">mark as complete</button></td>
-                </tr>
-                </tbody>
-            </table>
+    <div class="container mt-4">
+
+        <!-- Approved Companies -->
+        <div class="mb-5">
+            <h2 class="fw-bold fs-5 mb-3" v-if="!company_store.error_value">Registered Companies</h2>
+
+            <!-- IF SEARCHING -->
+            <div v-if="searchType === 'company' && approved_list.length">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Company Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="company in approved_list" :key="company.company_id">
+                            <td>{{ company.company_name }}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" @click="handleBlacklist(company.company_id)">Blacklist</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ELSE NORMAL APPROVED LIST -->
+            <div v-else>
+                <div v-if="company_store.approvedCompanies.length === 0 && !company_store.error_value" class="alert alert-warning">
+                    No Companies Found !!!
+                </div>
+                <table v-else class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Company Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="company in company_store.approvedCompanies" :key="company.company_id">
+                            <td>{{ company.company_name }}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" @click="company_store.black_list(company.company_id)">Blacklist</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div v-else>
-            No Ongoing Drives by You !!!
+
+        <!-- Pending Companies -->
+        <div>
+            <h2 class="fw-bold fs-5 mb-3" v-if="!company_store.error_value">To be approved Companies</h2>
+
+            <!-- IF SEARCHING -->
+            <div v-if="searchType === 'company' && pending_companies.length">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Company Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="company in pending_companies" :key="company.company_id">
+                            <td>{{ company.company_name }}</td>
+                            <td>
+                                <button class="btn btn-success btn-sm" @click="handleApprove(company.company_id)">Approve</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ELSE NORMAL PENDING LIST -->
+            <div v-else>
+                <div v-if="company_store.pendingCompanies.length === 0 && !company_store.error_value" class="alert alert-warning">
+                    No Companies Found !!!
+                </div>
+                <table v-else class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Company Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="company in company_store.pendingCompanies" :key="company.company_id">
+                            <td>{{ company.company_name }}</td>
+                            <td>
+                                <button class="btn btn-success btn-sm" @click="company_store.approve_company(company.company_id)">Approve</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+
     </div>
 </template>
-
-<style scoped>
-
-</style>

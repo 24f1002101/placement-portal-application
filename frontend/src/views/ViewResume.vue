@@ -8,6 +8,8 @@ const route = useRoute()
 const drive_id = route.params.drive_id
 const student_id = route.params.student_id
 const auth_store = useAuthStore()
+const loading = ref(true)
+
 async function view_resume(){
     const auth_token = auth_store.getAuthToken()
     const input = {
@@ -32,6 +34,7 @@ async function view_resume(){
         const output = await response.json()
         alert(output.message)
     }
+    loading.value = false
 }
 onMounted(()=>{
     view_resume()
@@ -39,7 +42,11 @@ onMounted(()=>{
 </script>
 
 <template>
-    <div>
+    <div class="container mt-5 text-center">
+        <div v-if="loading">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-3 text-muted">Loading resume, please wait...</p>
+        </div>
     </div>
 </template>
 

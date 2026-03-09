@@ -12,36 +12,33 @@ const placement_id = route.params.placement_id
 const company_id = route.params.company_id
 const email = auth_store.getUserEmail()
 
-
 function handleFileChange(event) {
-     const file = event.target.files[0]
-    
+    const file = event.target.files[0]
     if (!file) return
-
     if (file.type !== 'application/pdf') {
         alert('Please upload a PDF file only.')
         event.target.value = ''
         resume.value = null
         return
     }
-
     resume.value = file
 }
+
 async function applyDrive(id){
     if(!resume.value){
         alert("Please select your resume in a PDF format first !!!")
         return 
     }
     const form_data = new FormData()
-    form_data.append('resume',resume.value)
-    form_data.append('placement_id',id)
-    form_data.append('email',email)
-    const response = await fetch("http://127.0.0.1:5000/api/apply_drive",{
-        method : "POST",
-        headers :{
-            'Authentication-Token' : auth_token
+    form_data.append('resume', resume.value)
+    form_data.append('placement_id', id)
+    form_data.append('email', email)
+    const response = await fetch("http://127.0.0.1:5000/api/apply_drive", {
+        method: "POST",
+        headers: {
+            'Authentication-Token': auth_token
         },
-        body : form_data
+        body: form_data
     })
     if(response.ok){
         const output = await response.json()
@@ -51,15 +48,26 @@ async function applyDrive(id){
         const output = await response.json()
         alert(output.message)
     }
-
 }
 </script>
 
 <template>
-    <div>
-        <input type="file" accept=".pdf" @change="handleFileChange" />
-        <button @click="applyDrive(placement_id)">Apply</button>
-        <RouterLink :to="`/company/${company_id}/drives`"><button>Go Back</button></RouterLink>
+    <div class="container mt-5">
+        <div class="card p-4 shadow-sm" style="max-width: 500px; margin: auto;">
+            <h5 class="fw-bold mb-4">Apply for Drive</h5>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Upload Resume (PDF only)</label>
+                <input type="file" class="form-control" accept=".pdf" @change="handleFileChange" />
+            </div>
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" @click="applyDrive(placement_id)">Apply</button>
+                <RouterLink :to="`/company/${company_id}/drives`">
+                    <button class="btn btn-secondary">Go Back</button>
+                </RouterLink>
+            </div>
+        </div>
     </div>
 </template>
 

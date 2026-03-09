@@ -17,9 +17,9 @@ async function handleSearch(){
             "Authentication-Token" : auth_store.getAuthToken()
         }
     })
-  if(response.ok){
+    if(response.ok){
         searchResults.value = await response.json()
-}
+    }
 }
 console.log(username)
 function logouting(){
@@ -27,41 +27,56 @@ function logouting(){
     alert("Logouted Successfully !!!")
     router.push('/')
 }
-// Add this function to AdminDashboard.vue
 function removeFromSearch(id) {
-    // If we are searching students, filter by 'id', if companies, usually 'company_id'
     searchResults.value = searchResults.value.filter(item => 
         (item.id !== id && item.company_id !== id)
     );
 }
-
-// Then, pass this function down to your components
-// <Companies :searchResults="searchResults" @action-taken="removeFromSearch" ... />
 </script>
 
 <template>
     <div v-if="username">
-        <input v-model="search_value" placeholder="Search..." />
 
-        <select v-model="searchType">
-        <option value="student">Students</option>
-        <option value="company">Companies</option>
-        </select>
+        <!-- Navbar -->
+        <nav class="navbar navbar-dark bg-dark px-4 mb-4">
+            <span class="navbar-brand fw-bold">Admin Dashboard</span>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-white">{{ username }}</span>
+                <RouterLink to="/ongoing_drives_admin" class="btn btn-outline-light btn-sm">Ongoing Drives</RouterLink>
+                <RouterLink to="/student_applications" class="btn btn-outline-light btn-sm">Student Applications</RouterLink>
+                <a class="btn btn-danger btn-sm" @click="logouting">Logout</a>
+            </div>
+        </nav>
 
-        <button @click="handleSearch">Search</button>
-        <RouterLink to="/ongoing_drives_admin"><a>Ongoing Drives</a></RouterLink>
-        <RouterLink to="/student_applications">Student Applications</RouterLink>
-        {{username}}
+        <!-- Search Bar -->
+        <div class="container mb-4">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-6">
+                    <input class="form-control" v-model="search_value" placeholder="Search..." />
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" v-model="searchType">
+                        <option value="student">Students</option>
+                        <option value="company">Companies</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100" @click="handleSearch">Search</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Components -->
         <Companies :searchResults="searchResults" :searchType="searchType" @action-taken="removeFromSearch"></Companies>
         <Students :searchResults="searchResults" :searchType="searchType" @action-taken="removeFromSearch"></Students>
 
-        <a v-on:click="logouting">Logout</a>
     </div>
-    <div v-else>
-        <p>You must login first to view the functionalities !!!</p>
+    <div v-else class="container mt-5">
+        <div class="alert alert-warning text-center">
+            You must login first to view the functionalities !!!
+        </div>
     </div>
 </template>
 
 <style scoped>
-
 </style>

@@ -24,25 +24,32 @@ onMounted(()=>{
 </script>
 
 <template>
-<div>
+<div class="container mt-4">
     <div v-if="approved_companies.length > 0">
-        <table border="1">
-            <thead>
-                <th>Company</th>
-                <th>Action</th>
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Company</th>
+                    <th>Action</th>
+                </tr>
             </thead>
             <tbody>
-            <tr v-for="company in approved_companies" :key="company.id">
-                <td>{{ company.company_name }}</td>
-                <td><button><RouterLink :to="`/company/${company.company_id}/drives`">view details</RouterLink></button></td>
-            </tr>
+                <tr v-for="company in approved_companies" :key="company.company_id">
+                    <td>{{ company.company_name }}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm">
+                            <RouterLink :to="`/company/${company.company_id}/drives`" class="text-white text-decoration-none">view details</RouterLink>
+                        </button>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
-    <div v-else>
+    <div v-else class="alert alert-warning">
         No Companies to View !!!
     </div>
 </div>
 </template>
+
 <style scoped>
 </style>

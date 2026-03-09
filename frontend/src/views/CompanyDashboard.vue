@@ -7,7 +7,6 @@ import closed_drives from '@/components/closed_drives.vue';
 
 const auth_store = useAuthStore();
 
-// 1. Reactive Auth & User Data
 const loginned = computed(() => auth_store.isAuthenticated);
 const driveRefreshKey = ref(0);
 const refreshKey = ref(0);
@@ -21,21 +20,20 @@ const mail = computed(()=> userData.value?.email || '');
 const password = computed(()=> userData.value?.password || '');
 const auth_token = auth_store.getAuthToken()
 const company_id = ref('')
-// 2. FOOLPROOF DATE RESTRICTION
-// This function creates a YYYY-MM-DD string based on your LOCAL time
+
 const getLocalToday = () => {
     const now = new Date();
-    const offset = now.getTimezoneOffset() * 60000; // adjust for timezone
+    const offset = now.getTimezoneOffset() * 60000;
     const localISOTime = (new Date(now - offset)).toISOString().slice(0, 10);
     return localISOTime;
 };
 
-const minDate = getLocalToday(); // Used to disable past dates
+const minDate = getLocalToday();
 
 function refresh(){
     refreshKey.value++
 }
-// 3. Form State
+
 const showDriveForm = ref(false);
 const driveData = ref({
     name: '',
@@ -57,7 +55,6 @@ function logouted() {
 };
 
 async function handleCreateDrive() {
-    // Final safety check before submission
     if (driveData.value.deadline_date < minDate) {
         alert("Error: You cannot select a date in the past!");
         return;
@@ -70,7 +67,6 @@ async function handleCreateDrive() {
         alert("Error : Enter year between 1 to 4 !!!")
         return;
     }
-    console.log("Submitting Drive:", driveData.value);
     const data = {
         eligible_year : driveData.value.eligibility_year,
         eligible_branch : driveData.value.eligible_branch,
@@ -93,113 +89,102 @@ async function handleCreateDrive() {
         alert("Drive Created Successfully !!!");
         driveRefreshKey.value++;
     }
-   
 
     showDriveForm.value = false;
-    // Reset Form
     driveData.value = { 
         name: '', description: '', eligible_branch: '', 
         cutoff_cgpa: '', deadline_date: '' 
     };
 };
-
-
 </script>
 
 <template>
-    <div class="dashboard">
-        <div class="header-bar">
-            <div v-if="loginned">
-                <span>Welcome, <strong>{{ username }}</strong></span>
-                <span class="status-badge" :class="status">{{ status }}</span>
-            </div>
-            <button v-if="loginned" @click="logouted" class="logout-btn">Logout</button>
-        </div>
+    <div class="container py-4">
 
-        <div v-if="status === 'approved'" class="content">
-            <button @click="toggleDriveForm" class="create-btn">
+        <!-- Navbar -->
+        <nav class="navbar navbar-dark bg-dark px-4 rounded mb-4">
+            <span class="navbar-brand fw-bold">Company Dashboard</span>
+            <div class="d-flex align-items-center gap-3" v-if="loginned">
+                <span class="text-white">Welcome, <strong>{{ username }}</strong></span>
+                <span class="badge" :class="{
+                    'bg-success': status === 'approved',
+                    'bg-warning text-dark': status === 'pending',
+                    'bg-danger': status === 'blacklist'
+                }">{{ status }}</span>
+                <button class="btn btn-secondary btn-sm" @click="logouted">Logout</button>
+            </div>
+        </nav>
+
+        <!-- Approved View -->
+        <div v-if="status === 'approved'">
+
+            <!-- Toggle Form Button -->
+            <button class="btn btn-primary mb-3" @click="toggleDriveForm">
                 {{ showDriveForm ? '✖ Close' : '➕ Create New Drive' }}
             </button>
 
-            <div v-if="showDriveForm" class="form-container">
-                <h3>New Job Drive Details</h3>
+            <!-- Drive Form -->
+            <div v-if="showDriveForm" class="card p-4 mb-4 shadow-sm">
+                <h5 class="fw-bold mb-3">New Job Drive Details</h5>
                 <form @submit.prevent="handleCreateDrive">
-                    <div class="field">
-                        <label>Company/Drive Name</label>
-                        <input v-model="driveData.name" type="text" required  placeholder="Job Name">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Job Name</label>
+                        <input v-model="driveData.name" type="text" class="form-control" required placeholder="Job Name" />
                     </div>
 
-                    <div class="field">
-                        <label>Description</label>
-                        <textarea v-model="driveData.description" placeholder="enter detailed job description"></textarea>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Description</label>
+                        <textarea v-model="driveData.description" class="form-control" placeholder="Enter detailed job description"></textarea>
                     </div>
 
-                    <div class="field">
-                        <label>Deadline Date</label>
-                        <input 
-                            type="date" 
-                            v-model="driveData.deadline_date" 
-                            :min="minDate" 
-                            @keydown.prevent
-                            required 
-                        />
-                        <p class="hint">Only current or future dates are allowed.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Deadline Date</label>
+                        <input type="date" v-model="driveData.deadline_date" class="form-control" :min="minDate" @keydown.prevent required />
+                        <small class="text-muted">Only current or future dates are allowed.</small>
                     </div>
 
-                    <div class="field">
-                        <label>Eligible Branches</label>
-                        <input v-model="driveData.eligible_branch" type="text" placeholder="Branch e.g CSE/ECE/EEE"/>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Eligible Branches</label>
+                        <input v-model="driveData.eligible_branch" type="text" class="form-control" placeholder="e.g CSE,ECE,EEE" />
                     </div>
 
-                    <div class="field">
-                        <label>Minimum CGPA</label>
-                        <input v-model="driveData.cutoff_cgpa" type="number" step="0.01" placeholder="CGPA"/>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Minimum CGPA</label>
+                        <input v-model="driveData.cutoff_cgpa" type="number" step="0.01" class="form-control" placeholder="CGPA" />
                     </div>
 
-                    <div>
-                        <label>Eligible Year</label>
-                        <input v-model="driveData.eligibility_year" type="number" step="0.01" placeholder="eligible year"/>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Eligible Year</label>
+                        <input v-model="driveData.eligibility_year" type="number" step="1" class="form-control" placeholder="Eligible Year" />
                     </div>
 
-                    <button type="submit" class="submit-btn">Post Drive</button>
+                    <button type="submit" class="btn btn-success w-100">Post Drive</button>
                 </form>
             </div>
-            <ongoing_drives :key=driveRefreshKey @drive-closed="refresh"></ongoing_drives>
-            <closed_drives :key=refreshKey></closed_drives>
+
+            <ongoing_drives :key="driveRefreshKey" @drive-closed="refresh"></ongoing_drives>
+            <closed_drives :key="refreshKey"></closed_drives>
         </div>
 
-        <div v-else-if="status === 'pending' || status === 'blacklist'" class="restricted-view">
-            <div class="error-card">
-                <h2>Access Restricted</h2>
+        <!-- Restricted View -->
+        <div v-else-if="status === 'pending' || status === 'blacklist'" class="text-center mt-5">
+            <div class="alert alert-danger">
+                <h5>Access Restricted</h5>
                 <p>Your account status is currently <strong>{{ status }}</strong>.</p>
                 <p>You cannot create drives until your account is approved by the admin.</p>
             </div>
         </div>
 
-        <div v-else class="restricted-view">
-            <p>Please <RouterLink to="/">login</RouterLink> to access this page.</p>
+        <!-- Not Logged In -->
+        <div v-else class="text-center mt-5">
+            <div class="alert alert-warning">
+                Please <RouterLink to="/">login</RouterLink> to access this page.
+            </div>
         </div>
+
     </div>
 </template>
 
 <style scoped>
-.dashboard { padding: 30px; max-width: 900px; margin: auto; }
-.header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-.status-badge { margin-left: 10px; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; text-transform: uppercase; }
-.approved { background: #d4edda; color: #155724; }
-.pending { background: #fff3cd; color: #856404; }
-.blacklist { background: #f8d7da; color: #721c24; }
-
-.create-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 20px; }
-.form-container { background: #f9f9f9; padding: 25px; border-radius: 8px; margin-top: 20px; border: 1px solid #ddd; }
-.field { margin-bottom: 15px; }
-.field label { display: block; margin-bottom: 5px; font-weight: bold; }
-.hint { font-size: 0.8em; color: #666; margin-top: 4px; }
-
-input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-.submit-btn { width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-size: 1.1em; }
-
-.restricted-view { text-align: center; margin-top: 50px; }
-.error-card { border: 1px solid #f5c6cb; background: #f8d7da; padding: 40px; border-radius: 10px; color: #721c24; }
-.logout-btn { background: #6c757d; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
 </style>

@@ -39,10 +39,12 @@ onMounted(()=>{
 </script>
 
 <template>
-    <div>
+    <div class="container mt-4">
+
         <div v-if="drives.length > 0">
-                <table border="1">
-                    <thead>
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
                         <th>Placement ID</th>
                         <th>Job Title</th>
                         <th>Job Description</th>
@@ -51,27 +53,36 @@ onMounted(()=>{
                         <th>Eligibility CGPA</th>
                         <th>Application Deadline</th>
                         <th>Action</th>
-                    </thead>
-                    <tbody>
-                        <tr v-for="drive in drives" :key="drive.placement_id">
-                            <td>{{ drive.placement_id }}</td>
-                            <td>{{ drive.job_title }}</td>
-                            <td>{{ drive.job_description }}</td>
-                            <td>{{ drive.eligibility_year }}</td>
-                            <td>{{ drive.eligibility_branch }}</td>
-                            <td>{{ drive.eligibility_cgpa }}</td>
-                            <td>{{ drive.application_deadline }}</td>
-                            <td><RouterLink :to="`/apply/${drive.placement_id}/${comp_id}`"><button>Apply</button></RouterLink></td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-            </div>
-        <div v-else>
-            "No drives are applied to your category to apply !!!"
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="drive in drives" :key="drive.placement_id">
+                        <td>{{ drive.placement_id }}</td>
+                        <td>{{ drive.job_title }}</td>
+                        <td>{{ drive.job_description }}</td>
+                        <td>{{ drive.eligibility_year }}</td>
+                        <td>{{ drive.eligibility_branch }}</td>
+                        <td>{{ drive.eligibility_cgpa }}</td>
+                        <td>{{ drive.application_deadline }}</td>
+                        <td>
+                            <RouterLink :to="`/apply/${drive.placement_id}/${comp_id}`">
+                                <button class="btn btn-primary btn-sm">Apply</button>
+                            </RouterLink>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-            <RouterLink to="/student_dashboard"><button>Go Back</button></RouterLink>
+
+        <div v-else class="alert alert-warning">
+            No drives are available for your category !!!
         </div>
+
+        <RouterLink to="/student_dashboard">
+            <button class="btn btn-secondary mt-2">Go Back</button>
+        </RouterLink>
+
+    </div>
 </template>
 
 <style scoped>

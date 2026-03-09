@@ -22,21 +22,50 @@ function logout(){
 
 <template>
     <div>
-        <div v-if="loginned && status === 'approved' ">
-            Hello,{{ user_name }} , {{ status }}
-            <a v-on:click="logout">Logout</a>
-            <a><RouterLink to="/edit_profile">Edit Profile</RouterLink></a>
-            <a><RouterLink to="/application_history">View History</RouterLink></a>
-            <approved_companies></approved_companies>
+        <!-- Approved Student -->
+        <div v-if="loginned && status === 'approved'">
+
+            <!-- Navbar -->
+            <nav class="navbar navbar-dark bg-dark px-4 mb-4">
+                <span class="navbar-brand fw-bold">Student Dashboard</span>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-white">Hello, <strong>{{ user_name }}</strong></span>
+                    <span class="badge bg-success">{{ status }}</span>
+                    <RouterLink to="/edit_profile" class="btn btn-outline-light btn-sm">Edit Profile</RouterLink>
+                    <RouterLink to="/application_history" class="btn btn-outline-light btn-sm">View History</RouterLink>
+                    <button class="btn btn-danger btn-sm" @click="logout">Logout</button>
+                </div>
+            </nav>
+
+            <div class="container">
+                <approved_companies></approved_companies>
+            </div>
         </div>
-        <div v-else-if=" loginned && (status === 'pending' || status === 'blacklist' )">
-            Hello !!! {{ user_name }} | status : {{ status }}
-            <p>You are not allowed to perform the functionalities !!!</p>
-            <p><a v-on:click="logout">Logout</a></p>
+
+        <!-- Pending or Blacklisted Student -->
+        <div v-else-if="loginned && (status === 'pending' || status === 'blacklist')" class="container mt-5">
+            <nav class="navbar navbar-dark bg-dark px-4 mb-4 rounded">
+                <span class="navbar-brand fw-bold">Student Dashboard</span>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-white"><strong>{{ user_name }}</strong></span>
+                    <span class="badge" :class="status === 'pending' ? 'bg-warning text-dark' : 'bg-danger'">{{ status }}</span>
+                    <button class="btn btn-danger btn-sm" @click="logout">Logout</button>
+                </div>
+            </nav>
+            <div class="alert alert-warning text-center">
+                You are not allowed to perform the functionalities !!!
+            </div>
         </div>
+
+        <!-- Not Logged In -->
+        <div v-else class="container mt-5">
+            <div class="alert alert-warning text-center">
+                Please <RouterLink to="/">login</RouterLink> to access this page.
+            </div>
+        </div>
+
     </div>
 </template>
 
 <style scoped>
-
 </style>

@@ -39,7 +39,6 @@ onMounted(()=>{
 })
 
 const HandleSubmit = function(){
-    console.log(email.value)
     if(!email.value.includes('@gmail.com')){
         alert('Please enter valid email to Login !!!')
         return false
@@ -95,19 +94,45 @@ async function validity_check(){
 </script>
 
 <template>
-    <div>
-        <form v-on:submit.prevent="validity_check">
-            Name:<input type="text" v-model="name">
-            Email: <input type="text" v-model="email">
-            Year:<input type="number" v-model="year">   
-            Branch:<input type="text" v-model="branch">
-            CGPA:<input type="number" v-model="cgpa" step="any">
-            <input type="submit" value="submit">
-        </form>
-        <a><RouterLink to="/student_dashboard">Go Back</RouterLink></a>
+    <div class="container mt-5">
+        <div class="card p-4 shadow-sm" style="max-width: 500px; margin: auto;">
+            <h5 class="fw-bold mb-4">Edit Profile</h5>
+            <form @submit.prevent="validity_check">
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Name</label>
+                    <input type="text" class="form-control" v-model="name" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Email</label>
+                    <input type="text" class="form-control" v-model="email" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Year</label>
+                    <input type="number" class="form-control" v-model="year" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Branch</label>
+                    <input type="text" class="form-control" v-model="branch" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">CGPA</label>
+                    <input type="number" class="form-control" v-model="cgpa" step="any" />
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">Submit</button>
+                    <RouterLink to="/student_dashboard" class="btn btn-secondary w-100">Go Back</RouterLink>
+                </div>
+
+            </form>
+        </div>
     </div>
 </template>
 
 <style scoped>
-
 </style>

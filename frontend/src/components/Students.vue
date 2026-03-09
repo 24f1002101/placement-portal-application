@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { studentStore } from '@/stores/student_store';
 
-const emit = defineEmits(['action-taken'])  // ADD THIS
+const emit = defineEmits(['action-taken'])
 const student_store = studentStore()
 const props = defineProps({
     searchResults: Array,
@@ -17,7 +17,6 @@ const pendinglist = computed(() => {
     return props.searchResults.filter(s => s.status === 'pending')
 })
 
-// UPDATED: emit after action
 async function handleBlacklist(studentId) {
     const success = await student_store.black_list(studentId)
     if (success) emit('action-taken', studentId)
@@ -35,51 +34,103 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div>
-        <div>
-            <h2 v-if="!student_store.error_value">Registered Students</h2>
+    <div class="container mt-4">
+
+        <!-- Approved Students -->
+        <div class="mb-5">
+            <h2 class="fw-bold fs-5 mb-3" v-if="!student_store.error_value">Registered Students</h2>
 
             <!-- IF SEARCHING -->
             <div v-if="searchType === 'student' && approvedlist.length">
-                <div v-for="student in approvedlist" :key="student.id">
-                    {{ student.name }}
-                    <button @click="handleBlacklist(student.id)">Blacklist</button>  <!-- UPDATED -->
-                </div>
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="student in approvedlist" :key="student.id">
+                            <td>{{ student.name }}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" @click="handleBlacklist(student.id)">Blacklist</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
             <!-- ELSE NORMAL APPROVED LIST -->
             <div v-else>
-                <div v-if="student_store.Approvedstudentslist.length === 0 && !student_store.error_value">
+                <div v-if="student_store.Approvedstudentslist.length === 0 && !student_store.error_value" class="alert alert-warning">
                     No Students Found !!!
                 </div>
-                <div v-for="student in student_store.Approvedstudentslist" :key="student.id">
-                    {{ student.name }}
-                    <button @click="student_store.black_list(student.id)">Blacklist</button>
-                </div>
+                <table v-else class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="student in student_store.Approvedstudentslist" :key="student.id">
+                            <td>{{ student.name }}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" @click="student_store.black_list(student.id)">Blacklist</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
+        <!-- Pending Students -->
         <div>
-            <h2 v-if="!student_store.error_value">To be approved Students</h2>
+            <h2 class="fw-bold fs-5 mb-3" v-if="!student_store.error_value">To be approved Students</h2>
 
             <!-- IF SEARCHING -->
             <div v-if="searchType === 'student' && pendinglist.length">
-                <div v-for="student in pendinglist" :key="student.id">
-                    {{ student.name }}
-                    <button @click="handleApprove(student.id)">Approve</button>  <!-- UPDATED -->
-                </div>
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="student in pendinglist" :key="student.id">
+                            <td>{{ student.name }}</td>
+                            <td>
+                                <button class="btn btn-success btn-sm" @click="handleApprove(student.id)">Approve</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
-            <!-- ELSE NORMAL APPROVED LIST -->
+            <!-- ELSE NORMAL PENDING LIST -->
             <div v-else>
-                <div v-if="student_store.Pendingstudents.length === 0 && !student_store.error_value">
+                <div v-if="student_store.Pendingstudents.length === 0 && !student_store.error_value" class="alert alert-warning">
                     No Students Found !!!
                 </div>
-                <div v-for="student in student_store.Pendingstudents" :key="student.id">
-                    {{ student.name }}
-                    <button @click="student_store.approve_Student(student.id)">Approve</button>
-                </div>
+                <table v-else class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="student in student_store.Pendingstudents" :key="student.id">
+                            <td>{{ student.name }}</td>
+                            <td>
+                                <button class="btn btn-success btn-sm" @click="student_store.approve_Student(student.id)">Approve</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
+
     </div>
 </template>

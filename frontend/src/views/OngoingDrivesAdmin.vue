@@ -49,33 +49,41 @@ onMounted(()=>{
 </script>
 
 <template>
-    <div>
-        <div v-if="companies.length > 0 ">
-            <table border="1">
-                <thead>
-                    <th>Drive ID</th>
-                    <th>Company Name</th>
-                    <th>Job Role</th>
-                    <th>Job Description</th>
-                    <th>Action</th>
+    <div class="container mt-4">
+
+        <div v-if="companies.length > 0">
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Drive ID</th>
+                        <th>Company Name</th>
+                        <th>Job Role</th>
+                        <th>Job Description</th>
+                        <th>Action</th>
+                    </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="company in companies">
+                    <tr v-for="company in companies" :key="company.drive_id">
                         <td>{{ company.drive_id }}</td>
                         <td>{{ company.company_name }}</td>
                         <td>{{ company.Job_Role }}</td>
                         <td>{{ company.Job_Description }}</td>
-                        <td><button v-on:click="change(company.drive_id)">Mark as complete</button></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" @click="change(company.drive_id)">
+                                Mark as Complete
+                            </button>
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <div v-else>
+
+        <div v-else class="alert alert-warning">
             No Ongoing Drives !!!
         </div>
-        <div>
-            <RouterLink to="/admin_dashboard">Go Back</RouterLink>
-        </div>
+
+        <RouterLink to="/admin_dashboard" class="btn btn-secondary mt-2">Go Back</RouterLink>
+
     </div>
 </template>
 

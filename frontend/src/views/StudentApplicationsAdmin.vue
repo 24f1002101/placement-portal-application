@@ -22,24 +22,26 @@ async function fetch_applications(){
 onMounted(()=>{
     fetch_applications()
 })
-
 </script>
 
 <template>
-    <div>
+    <div class="container mt-4">
+
         <div v-if="applications.length > 0">
-            <table border="1">
-                <thead>
-                    <th>Application ID</th>
-                    <th>Dive ID</th>
-                    <th>Student Name</th>
-                    <th>Branch</th>
-                    <th>CGPA</th>
-                    <th>Year</th>
-                    <th>Company Name</th>
-                    <th>Application Date</th>
-                    <th>Application Status</th>
-                    <th>Action</th>
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Application ID</th>
+                        <th>Drive ID</th>
+                        <th>Student Name</th>
+                        <th>Branch</th>
+                        <th>CGPA</th>
+                        <th>Year</th>
+                        <th>Company Name</th>
+                        <th>Application Date</th>
+                        <th>Application Status</th>
+                        <th>Action</th>
+                    </tr>
                 </thead>
                 <tbody>
                     <tr v-for="application in applications" :key="application.application_id">
@@ -50,22 +52,26 @@ onMounted(()=>{
                         <td>{{ application.cgpa }}</td>
                         <td>{{ application.year }}</td>
                         <td>{{ application.company_name }}</td>
-                        <td>{{ application.application_date }}</td> 
-                        <td>{{ application.status }}</td> 
-                        <td><RouterLink :to="`/view/${application.student_id}/${application.drive_id}`"><button>View</button></RouterLink></td>
+                        <td>{{ application.application_date }}</td>
+                        <td>{{ application.status }}</td>
+                        <td>
+                            <RouterLink :to="`/view/${application.student_id}/${application.drive_id}`">
+                                <button class="btn btn-primary btn-sm">View</button>
+                            </RouterLink>
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <div v-else>
+
+        <div v-else class="alert alert-warning">
             No Student Applications !!!
         </div>
-        <div>
-            <RouterLink to="/admin_dashboard">Go Back</RouterLink>
-        </div>
+
+        <RouterLink to="/admin_dashboard" class="btn btn-secondary mt-2">Go Back</RouterLink>
+
     </div>
 </template>
 
 <style scoped>
-
 </style>

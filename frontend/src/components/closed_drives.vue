@@ -33,38 +33,39 @@ onMounted(()=>{
 </script>
 
 <template>
-     <div>
-        <p>Closed Drives</p>
+    <div class="container mt-4">
+        <p class="fw-bold fs-5">Closed Drives</p>
         <div v-if="closed_companies.length > 0">
-           <table border="1">
-                <thead>
-                    <th>Placement ID</th>
-                    <th>Company Name</th>
-                    <th>Job Role</th>
-                    <th>Job Description</th>
-                    <th>Eligible Year</th>
-                    <th>Eligible Branch</th>
-                    <th>Eligible CGPA</th>
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Placement ID</th>
+                        <th>Company Name</th>
+                        <th>Job Role</th>
+                        <th>Job Description</th>
+                        <th>Eligible Year</th>
+                        <th>Eligible Branch</th>
+                        <th>Eligible CGPA</th>
+                    </tr>
                 </thead>
                 <tbody>
-                <tr v-for="drive in closed_companies" :key="drive.id">
-                    <td>{{ drive.id }}</td>
-                    <td>{{ drive.company_details.company_name }}</td>
-                    <td>{{ drive.job_title }}</td>
-                    <td>{{ drive.job_description }}</td>
-                    <td>{{ drive.eligibility_year }}</td>
-                    <td>{{ drive.eligibility_branch }}</td>
-                    <td>{{ drive.eligibility_cgpa }}</td>
-                </tr>
+                    <tr v-for="drive in closed_companies" :key="drive.id">
+                        <td>{{ drive.id }}</td>
+                        <td>{{ drive.company_details.company_name }}</td>
+                        <td>{{ drive.job_title }}</td>
+                        <td>{{ drive.job_description }}</td>
+                        <td>{{ drive.eligibility_year }}</td>
+                        <td>{{ drive.eligibility_branch }}</td>
+                        <td>{{ drive.eligibility_cgpa }}</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
-        <div v-else>
+        <div v-else class="alert alert-warning">
             No Closed Drives by You !!!
         </div>
     </div>
 </template>
 
 <style scoped>
-
 </style>
