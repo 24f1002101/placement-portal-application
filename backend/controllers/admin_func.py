@@ -6,7 +6,7 @@ from model.models import *
 from sqlalchemy import or_
 from sqlalchemy import func
 from datetime import datetime,date
-today = date.today()
+
 @app.route('/api/registered_companies',methods=['GET'])
 @auth_required('token')
 @roles_required('admin')
@@ -222,6 +222,7 @@ def admin_search():
 @auth_required('token')
 @roles_required('admin')
 def get_drives():
+    today = date.today()
     ongoing_placements = db.session.query(PlacementDrive).filter(PlacementDrive.status=='approved',func.date(PlacementDrive.application_deadline)>=today).all()
     result = []
     for i in ongoing_placements :
