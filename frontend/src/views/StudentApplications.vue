@@ -1,28 +1,19 @@
 <script setup>
 import { ref } from 'vue';
-import { useAuthStore } from '@/stores/counter';
 import { onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import router from '@/router';
-
+import { useAuthStore } from '@/stores/counter';
+import { useRoute} from 'vue-router';
+const route = useRoute()
 const auth_store = useAuthStore();
-const route = useRoute();
-const drive_id = route.params.drive_id
-const student_id = route.params.student_id
+const user_email = auth_store.getUserEmail()
 const auth_token = auth_store.getAuthToken()
-const student_name = ref('')
-const branch = ref('')
-const year = ref(1)
-const cgpa = ref(3.67)
-const job_role = ref('')
-const seleced_value = ref('')
-
-async function fetch_application_details(){
+const drive_id = route.params.drive_id
+const applications = ref([])
+async function fetch_applications(){
     const input = {
-        drive_id : drive_id,
-        student_id : student_id
+        drive_id : drive_id
     }
-    const response = await fetch("http://127.0.0.1:5000/api/get_student_application_details",{
+    const response = await fetch("http://127.0.0.1:5000/api/get_student_applications",{
         method : "POST",
         headers : {
             "Content-Type" : "application/json",
@@ -32,117 +23,55 @@ async function fetch_application_details(){
     })
     if(response.ok){
         const output = await response.json()
-        student_name.value = output.student_name
-        branch.value = output.branch
-        year.value = output.year
-        cgpa.value = output.cgpa
-        job_role.value = output.job_role
-    } else {
-        const output = await response.json()
+        applications.value = output
+    }
+    else{
         alert(output.message)
         return
     }
 }
-
-async function change_details(student_id, drive_id){
-    const auth_token = auth_store.getAuthToken()
-    const input = {
-        student_id : student_id,
-        drive_id : drive_id,
-        value : seleced_value.value
-    }
-    const response = await fetch("http://127.0.0.1:5000/api/change_details_application",{
-        method : "PUT",
-        headers : {
-            "Content-Type" : "application/json",
-            "Authentication-Token" : auth_token
-        },
-        body : JSON.stringify(input)
-    })
-    if(response.ok){
-        const output = await response.json()
-        alert(output.message)
-        router.push(`/get_applications/${drive_id}`)
-    } else {
-        const output = await response.json()
-        alert(output.message)
-    }
-}
-
-async function view_resume(student_id, drive_id){
-    const input = {
-        student_id : student_id,
-        drive_id : drive_id
-    }
-    const response = await fetch("http://127.0.0.1:5000/api/view_resume",{
-        method : "POST",
-        headers : {
-            "Content-Type" : "application/json",
-            "Authentication-Token" : auth_token
-        },
-        body : JSON.stringify(input)
-    })
-    if(response.ok){
-        const blob = await response.blob()
-        const url = URL.createObjectURL(blob)
-        window.open(url, '_blank')
-    } else {
-        const output = await response.json()
-        alert(output.message)
-    }
-}
-
 onMounted(()=>{
-    fetch_application_details()
+    fetch_applications()
 })
 </script>
 
 <template>
-    <div class="container mt-5">
-        <div class="card p-4 shadow-sm" style="max-width: 500px; margin: auto;">
-            <h5 class="fw-bold mb-4">Application Details</h5>
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h4 fw-bold text-dark">Student Applications</h2>
+            <RouterLink to="/company_dashboard" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Go Back
+            </RouterLink>
+        </div>
 
-            <table class="table table-bordered mb-4">
-                <tbody>
-                    <tr>
-                        <th>Student Name</th>
-                        <td>{{ student_name }}</td>
-                    </tr>
-                    <tr>
-                        <th>Branch</th>
-                        <td>{{ branch }}</td>
-                    </tr>
-                    <tr>
-                        <th>Year</th>
-                        <td>{{ year }}</td>
-                    </tr>
-                    <tr>
-                        <th>CGPA</th>
-                        <td>{{ cgpa }}</td>
-                    </tr>
-                    <tr>
-                        <th>Job Role</th>
-                        <td>{{ job_role }}</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <button class="btn btn-primary w-100 mb-3" @click="view_resume(student_id, drive_id)">
-                View Resume
-            </button>
-
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Update Status</label>
-                <select class="form-select" v-model="seleced_value">
-                    <option value="shortlisted">Shortlisted</option>
-                    <option value="waiting">Waiting</option>
-                    <option value="rejected">Reject</option>
-                </select>
+        <div v-if="applications.length > 0" class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Student Name</th>
+                            <th class="text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="application in applications" :key="application.student_id">
+                            <td class="ps-4 fw-medium">{{ application.student_name }}</td>
+                            <td class="text-end pe-4">
+                                <RouterLink 
+                                    :to="`/review_application/${drive_id}/${application.student_id}`" 
+                                    class="btn btn-primary btn-sm px-3"
+                                >
+                                    Review Application
+                                </RouterLink>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+        </div>
 
-            <button class="btn btn-success w-100" @click="change_details(student_id, drive_id)">
-                Save
-            </button>
+        <div v-else class="alert alert-info border-0 shadow-sm rounded-3">
+            <i class="bi bi-info-circle me-2"></i> No applications have been submitted for this drive yet.
         </div>
     </div>
 </template>

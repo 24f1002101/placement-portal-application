@@ -1,82 +1,171 @@
 <script setup>
 import { useAuthStore } from '@/stores/counter';
-import { onMounted, ref } from 'vue';
-import router from '@/router';
-import Companies from '@/components/Companies.vue';
-import Students from '@/components/Students.vue';
-const auth_store = useAuthStore()
-const search_value = ref('')
-console.log(auth_store.isAuthenticated)
-const username = ref(JSON.parse(localStorage.getItem('user'))?.name || null)
-const searchType = ref('student')
-const searchResults = ref([])
-async function handleSearch(){
-    const response = await fetch(`http://127.0.0.1:5000/api/admin_search?type=${searchType.value}&query=${search_value.value}`,{
-        method : 'GET',
-        headers: {
-            "Authentication-Token" : auth_store.getAuthToken()
-        }
+import { ref } from 'vue';
+import { onMounted } from 'vue';
+const applications = ref([])
+const student_id = ref(0)
+async function history(){
+    const auth_store = useAuthStore();
+    const email = auth_store.getUserEmail()
+    const auth_token = auth_store.getAuthToken()
+    const input = {
+        email  : email
+    }
+    const response = await fetch("http://127.0.0.1:5000/api/get_history",{
+        method : "POST",
+        headers : {
+            "Content-Type" : "application/json",
+            "Authentication-Token" : auth_token
+        },
+        body : JSON.stringify(input)
     })
     if(response.ok){
-        searchResults.value = await response.json()
+        const output = await response.json()
+        applications.value = output.history
+        student_id.value = output.student_id
+    }
+    else{
+        const output = await response.json()
+        alert(output.message)
     }
 }
-console.log(username)
-function logouting(){
-    auth_store.clearAuthToken()
-    alert("Logouted Successfully !!!")
-    router.push('/')
+async function generate(student_id) {
+    const auth_store = useAuthStore();
+    const auth_token = auth_store.getAuthToken()
+    const input = {
+        student_id: student_id
+    }
+    const response = await fetch("http://127.0.0.1:5000/api/get_csv",{
+        method : "POST",
+        headers : {
+            "Content-Type" : "application/json",
+            "Authentication-Token" : auth_token
+        },
+        body : JSON.stringify(input)
+    })
+    if(response.ok){
+        const output = await response.json()
+        alert(output.message)
+    }
+    else{
+        const output = await response.json()
+        alert(output.message)
+    }
 }
-function removeFromSearch(id) {
-    searchResults.value = searchResults.value.filter(item => 
-        (item.id !== id && item.company_id !== id)
-    );
-}
+onMounted(()=>{
+    history()
+})
 </script>
 
 <template>
-    <div v-if="username">
+    <div class="container-fluid py-4 px-4 bg-light min-vh-100">
 
-        <!-- Navbar -->
-        <nav class="navbar navbar-dark bg-dark px-4 mb-4">
-            <span class="navbar-brand fw-bold">Admin Dashboard</span>
-            <div class="d-flex align-items-center gap-3">
-                <span class="text-white">{{ username }}</span>
-                <RouterLink to="/ongoing_drives_admin" class="btn btn-outline-light btn-sm">Ongoing Drives</RouterLink>
-                <RouterLink to="/student_applications" class="btn btn-outline-light btn-sm">Student Applications</RouterLink>
-                <a class="btn btn-danger btn-sm" @click="logouting">Logout</a>
+        <nav class="navbar navbar-expand-lg navbar-white bg-white shadow-sm rounded-4 mb-4 px-3">
+            <div class="container-fluid">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
+                        <i class="bi bi-clock-history text-primary"></i>
+                    </div>
+                    <span class="navbar-brand mb-0 h1 fw-bold text-dark">Application History</span>
+                </div>
+                <div class="ms-auto d-flex gap-2">
+                    <button 
+                        v-if="applications.length > 0"
+                        class="btn btn-success btn-sm px-3 rounded-pill d-flex align-items-center" 
+                        @click="generate(student_id)"
+                    >
+                        <i class="bi bi-file-earmark-spreadsheet me-2"></i>Export CSV
+                    </button>
+                    <RouterLink to="/student_dashboard" class="btn btn-outline-secondary btn-sm px-3 rounded-pill">
+                        <i class="bi bi-arrow-left me-1"></i>Back
+                    </RouterLink>
+                </div>
             </div>
         </nav>
 
-        <!-- Search Bar -->
-        <div class="container mb-4">
-            <div class="row g-2 align-items-center">
-                <div class="col-md-6">
-                    <input class="form-control" v-model="search_value" placeholder="Search..." />
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-body p-0">
+                <div v-if="applications.length > 0" class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4 py-3 text-secondary small text-uppercase fw-bold">App ID</th>
+                                <th class="py-3 text-secondary small text-uppercase fw-bold">Company</th>
+                                <th class="py-3 text-secondary small text-uppercase fw-bold">Job Role</th>
+                                <th class="pe-4 py-3 text-end text-secondary small text-uppercase fw-bold">Current Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="application in applications" :key="application.application_id">
+                                <td class="ps-4">
+                                    <span class="text-muted fw-mono">#{{ application.application_id }}</span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ application.company_name }}</div>
+                                </td>
+                                <td>
+                                    <span class="text-secondary small">{{ application.job_role }}</span>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <span class="badge rounded-pill px-3 py-2"
+                                        :class="{
+                                            'bg-success-subtle text-success border border-success-subtle': application.status === 'selected',
+                                            'bg-warning-subtle text-warning-emphasis border border-warning-subtle': application.status === 'waiting' || application.status === 'pending',
+                                            'bg-danger-subtle text-danger border border-danger-subtle': application.status === 'rejected',
+                                            'bg-info-subtle text-info-emphasis border border-info-subtle': application.status === 'shortlisted'
+                                        }">
+                                        <i class="bi bi-dot me-1"></i>
+                                        {{ application.status.charAt(0).toUpperCase() + application.status.slice(1) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="col-md-3">
-                    <select class="form-select" v-model="searchType">
-                        <option value="student">Students</option>
-                        <option value="company">Companies</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-primary w-100" @click="handleSearch">Search</button>
+
+                <div v-else class="p-5 text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-folder2-open display-4 text-muted opacity-25"></i>
+                    </div>
+                    <h5 class="text-secondary fw-bold">No History Yet</h5>
+                    <p class="text-muted small mx-auto" style="max-width: 300px;">
+                        You haven't applied to any companies yet. Start your journey by exploring ongoing drives!
+                    </p>
+                    <RouterLink to="/student_dashboard" class="btn btn-primary btn-sm px-4 mt-2 rounded-pill">
+                        Browse Drives
+                    </RouterLink>
                 </div>
             </div>
         </div>
 
-        <!-- Components -->
-        <Companies :searchResults="searchResults" :searchType="searchType" @action-taken="removeFromSearch"></Companies>
-        <Students :searchResults="searchResults" :searchType="searchType" @action-taken="removeFromSearch"></Students>
-
-    </div>
-    <div v-else class="container mt-5">
-        <div class="alert alert-warning text-center">
-            You must login first to view the functionalities !!!
-        </div>
     </div>
 </template>
 
 <style scoped>
+/* Aesthetic Polishing */
+.fw-mono {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+}
+
+.table thead th {
+    font-size: 0.7rem;
+    letter-spacing: 0.05rem;
+}
+
+.badge {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: capitalize;
+}
+
+/* Subtle row hover animation */
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.02);
+    transition: background-color 0.2s ease;
+}
+
+.card {
+    transition: box-shadow 0.3s ease;
+}
 </style>

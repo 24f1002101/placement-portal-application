@@ -1,137 +1,127 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { companyStore } from '@/stores/company_store';
-import { computed } from 'vue';
-
-const emit = defineEmits(['action-taken'])
-const company_store = companyStore()
-const props = defineProps({
-    searchResults: Array,
-    searchType: String
-})
-const approved_list = computed(() => {
-    if (props.searchType !== 'company') return []
-    return props.searchResults.filter(c => c.status === 'approved')
-})
-const pending_companies = computed(() => {
-    if (props.searchType !== 'company') return []
-    return props.searchResults.filter(c => c.status === 'pending')
-})
-
-async function handleBlacklist(companyId) {
-    const success = await company_store.black_list(companyId)
-    if (success) emit('action-taken', companyId)
+import { useAuthStore } from '@/stores/counter';
+import { ref } from 'vue';
+import { onMounted } from 'vue';
+import { defineEmits } from 'vue';
+const auth_store = useAuthStore();
+const emit = defineEmits(['drive-closed'])
+const ongoing_companies = ref([])
+async function ongoing_drives(){
+    const auth_token = auth_store.getAuthToken()
+    const mail = auth_store.getUserEmail()
+    const input = {
+        email : mail
+    }
+    const response = await fetch("http://127.0.0.1:5000/api/ongoing_drives",{
+        method : "POST",
+        headers:
+            {  
+                "Content-Type" : "application/json",
+                "Authentication-Token" : auth_token
+            },
+        body : JSON.stringify(input)
+    })
+    if(!response.ok){
+        const output = await response.json()
+        alert(output.message)
+    }
+    else{
+        ongoing_companies.value = await response.json()
+    }
 }
-
-async function handleApprove(companyId) {
-    const success = await company_store.approve_company(companyId)
-    if (success) emit('action-taken', companyId)
+async function close_drive(placement_id){
+    const auth_token = auth_store.getAuthToken()
+    const mail = auth_store.getUserEmail()
+    const input = {
+        id : placement_id
+    }
+    const response = await fetch("http://127.0.0.1:5000/api/close_drive",{
+        method : "PUT",
+        headers : {
+            "Content-Type" : "application/json",
+            "Authentication-Token" : auth_token
+        },
+        body : JSON.stringify(input)
+    })
+    if(response.ok){
+        const output = await response.json()
+        alert(output.message)
+        emit('drive-closed')
+    }
+    await ongoing_drives()
 }
-
-onMounted(async () => {
-    await company_store.fetchapprovedCompanies()
-    await company_store.fetchpendingCompanies()
+onMounted(()=>{
+    ongoing_drives()
 })
 </script>
 
 <template>
-    <div class="container mt-4">
-
-        <!-- Approved Companies -->
-        <div class="mb-5">
-            <h2 class="fw-bold fs-5 mb-3" v-if="!company_store.error_value">Registered Companies</h2>
-
-            <!-- IF SEARCHING -->
-            <div v-if="searchType === 'company' && approved_list.length">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Company Name</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="company in approved_list" :key="company.company_id">
-                            <td>{{ company.company_name }}</td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" @click="handleBlacklist(company.company_id)">Blacklist</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+    <div class="container-fluid py-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold text-primary">
+                    <i class="bi bi-briefcase-fill me-2"></i>Ongoing Placement Drives
+                </h5>
             </div>
 
-            <!-- ELSE NORMAL APPROVED LIST -->
-            <div v-else>
-                <div v-if="company_store.approvedCompanies.length === 0 && !company_store.error_value" class="alert alert-warning">
-                    No Companies Found !!!
+            <div class="card-body p-0">
+                <div v-if="ongoing_companies.length > 0" class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-secondary small text-uppercase">
+                            <tr>
+                                <th class="px-4">Drive ID</th>
+                                <th>Company</th>
+                                <th>Role</th>
+                                <th>Description</th>
+                                <th>Year</th>
+                                <th>Branch</th>
+                                <th>Min CGPA</th>
+                                <th class="text-end px-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="drive in ongoing_companies" :key="drive.id">
+                                <td class="px-4 text-muted">#{{ drive.id }}</td>
+                                <td>
+                                    <span class="fw-bold text-dark">{{ drive.company_details.company_name }}</span>
+                                </td>
+                                <td><span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3">{{ drive.job_title }}</span></td>
+                                <td class="text-truncate" style="max-width: 200px;">{{ drive.job_description }}</td>
+                                <td>{{ drive.eligibility_year }}</td>
+                                <td>{{ drive.eligibility_branch }}</td>
+                                <td><span class="fw-medium text-success">{{ drive.eligibility_cgpa }}</span></td>
+                                <td class="text-end px-4">
+                                    <div class="btn-group shadow-sm">
+                                        <RouterLink :to="`/get_applications/${drive.id}`" class="btn btn-outline-primary btn-sm">
+                                            View Details
+                                        </RouterLink>
+                                        <button @click="close_drive(drive.id)" class="btn btn-success btn-sm">
+                                            Mark Complete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <table v-else class="table table-bordered table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Company Name</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="company in company_store.approvedCompanies" :key="company.company_id">
-                            <td>{{ company.company_name }}</td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" @click="company_store.black_list(company.company_id)">Blacklist</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+
+                <div v-else class="p-5 text-center">
+                    <div class="display-6 text-muted mb-3"><i class="bi bi-folder2-open"></i></div>
+                    <p class="h5 text-secondary">No Ongoing Drives Found</p>
+                    <p class="small text-muted">You haven't initiated any placement drives yet.</p>
+                </div>
             </div>
         </div>
-
-        <!-- Pending Companies -->
-        <div>
-            <h2 class="fw-bold fs-5 mb-3" v-if="!company_store.error_value">To be approved Companies</h2>
-
-            <!-- IF SEARCHING -->
-            <div v-if="searchType === 'company' && pending_companies.length">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Company Name</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="company in pending_companies" :key="company.company_id">
-                            <td>{{ company.company_name }}</td>
-                            <td>
-                                <button class="btn btn-success btn-sm" @click="handleApprove(company.company_id)">Approve</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- ELSE NORMAL PENDING LIST -->
-            <div v-else>
-                <div v-if="company_store.pendingCompanies.length === 0 && !company_store.error_value" class="alert alert-warning">
-                    No Companies Found !!!
-                </div>
-                <table v-else class="table table-bordered table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Company Name</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="company in company_store.pendingCompanies" :key="company.company_id">
-                            <td>{{ company.company_name }}</td>
-                            <td>
-                                <button class="btn btn-success btn-sm" @click="company_store.approve_company(company.company_id)">Approve</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
     </div>
 </template>
+
+<style scoped>
+/* Minor cleanup for table text fluidity */
+.table-responsive {
+    scrollbar-width: thin;
+}
+.btn-sm {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+}
+</style>
