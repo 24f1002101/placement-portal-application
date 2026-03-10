@@ -5,7 +5,7 @@ from model.models import *
 from controllers.user_datastore import user_datastore
 from celery.schedules import crontab
 from mail import send_email
-from datetime import datetime
+from datetime import date
 from datetime import timedelta
 from datetime import date,timedelta
 
@@ -21,11 +21,11 @@ celery.conf.update(
 celery.conf.beat_schedule = {
     'send-deadline-reminders': {
         'task': 'celery_app.send_deadline_reminders',
-        'schedule': crontab(hour=23, minute=6),        
+        'schedule': crontab(hour=23, minute=35),        
     },
     'send-email-admin-placements' : {
         'task' : 'celery_app.send_monthly_report',
-        'schedule' : crontab(hour=16,minute=46),
+        'schedule' : crontab(hour=23,minute=29),
     }
 }
 
@@ -58,8 +58,8 @@ def generate_csv(student_id):
 @celery.task()
 def send_deadline_reminders():
     with app.app_context():
-        today = datetime.now()
-        deadline_limit = today + timedelta(days=10)  
+        today = date.today()
+        deadline_limit = today + timedelta(days=10) 
         upcoming_drives = db.session.query(PlacementDrive).filter(
             PlacementDrive.status == 'approved',
             PlacementDrive.application_deadline >= today,
@@ -158,7 +158,7 @@ def send_monthly_report():
                 Application.drive_id == drive.id
             ).all()
             total_applied = len(applications)
-            total_selected = len([a for a in applications if a.status == 'selected'])
+            total_selected = len([a for a in applications if a.status == 'shortlisted'])
             total_applied_all += total_applied
             total_selected_all += total_selected
             company = db.session.query(Company).filter(Company.id == drive.company_id).first()
