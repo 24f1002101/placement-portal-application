@@ -82,7 +82,7 @@ function removeFromSearch(id) {
                         <label class="form-label small fw-bold text-secondary">Find Records</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                            <input class="form-control border-start-0" v-model="search_value" placeholder="Type name or ID..." @keyup.enter="handleSearch" />
+                            <input class="form-control border-start-0" v-model="search_value" placeholder="Type name " @keyup.enter="handleSearch" />
                         </div>
                     </div>
                     <div class="col-md-3">
