@@ -21,11 +21,11 @@ celery.conf.update(
 celery.conf.beat_schedule = {
     'send-deadline-reminders': {
         'task': 'celery_app.send_deadline_reminders',
-        'schedule': crontab(hour=23, minute=35),        
+        'schedule': crontab(hour=0, minute=41),        
     },
     'send-email-admin-placements' : {
         'task' : 'celery_app.send_monthly_report',
-        'schedule' : crontab(hour=23,minute=29),
+        'schedule' : crontab(hour=0,minute=42),
     }
 }
 
